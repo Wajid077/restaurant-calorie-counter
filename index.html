@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Restaurant Calorie Counter: Add Up a Meal in Seconds</title>
+<meta name="description" content="A free, lightweight calorie counter for restaurant meals. Tick the dishes you're ordering and see total calories, protein and salt against UK daily guidance. Embeddable on any site.">
+<link rel="canonical" href="https://wajid077.github.io/restaurant-calorie-counter/">
+<style>
+:root{--ink:#1f2a27;--muted:#5b6762;--line:#e3ddd2;--bg:#fbf8f2;--card:#fff;--accent:#1f4e46;--warm:#c9822b;--bad:#b4442c}
+@media (prefers-color-scheme:dark){:root{--ink:#ece8e0;--muted:#a8b1ac;--line:#34403c;--bg:#151b19;--card:#1d2523;--accent:#7cc4b5;--warm:#e0a253;--bad:#ec8a72}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+main{max-width:760px;margin:0 auto;padding:24px 16px 48px}
+h1{font-size:1.6rem;line-height:1.2;margin:0 0 4px}
+.lede{color:var(--muted);margin:0 0 18px}
+.controls{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+input[type=search],select{font:inherit;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink)}
+input[type=search]{flex:1 1 220px;min-width:0}
+.total{position:sticky;top:0;z-index:2;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin:0 0 14px;display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.stat b{display:block;font-size:1.35rem;font-variant-numeric:tabular-nums}
+.stat span{font-size:.78rem;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+.bar{grid-column:1/-1;height:6px;background:var(--line);border-radius:3px;overflow:hidden}
+.bar i{display:block;height:100%;width:0;background:var(--accent);transition:width .2s}
+.bar.over i{background:var(--bad)}
+.picked{grid-column:1/-1;font-size:.85rem;color:var(--muted);display:flex;justify-content:space-between;gap:8px}
+.picked button{font:inherit;background:none;border:0;color:var(--accent);cursor:pointer;padding:0;text-decoration:underline}
+ul{list-style:none;margin:0;padding:0;border:1px solid var(--line);border-radius:12px;background:var(--card);overflow:hidden}
+li{display:grid;grid-template-columns:auto 1fr auto auto;gap:10px;align-items:center;padding:9px 12px;border-top:1px solid var(--line)}
+li:first-child{border-top:0}
+li.h{background:var(--bg);font-size:.78rem;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);padding:6px 12px;display:block}
+.qty{display:flex;align-items:center;gap:4px}
+.qty button{width:28px;height:28px;border-radius:50%;border:1px solid var(--line);background:var(--bg);color:var(--ink);font:inherit;line-height:1;cursor:pointer}
+.qty output{min-width:1.2em;text-align:center;font-variant-numeric:tabular-nums}
+.k{font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap}
+.s{font-size:.8rem;color:var(--muted);white-space:nowrap}
+.s.hi{color:var(--bad)}
+li.on{background:color-mix(in srgb,var(--accent) 8%,var(--card))}
+.empty{padding:16px;color:var(--muted)}
+footer{color:var(--muted);font-size:.85rem;margin-top:24px;line-height:1.6}
+footer a,.src a{color:var(--accent)}
+details{margin-top:18px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 14px}
+summary{cursor:pointer;font-weight:600}
+textarea{width:100%;font:13px/1.4 ui-monospace,Menlo,Consolas,monospace;padding:8px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink)}
+.embed main{padding:12px}
+.embed .lede,.embed details,.embed footer p.more{display:none}
+.embed h1{font-size:1.2rem}
+@media (max-width:480px){li{grid-template-columns:auto 1fr auto}.s{display:none}}
+</style>
+</head>
+<body>
+<main>
+<h1>Restaurant calorie counter</h1>
+<p class="lede">Tap + on the dishes you're ordering and the totals update as you go. Calories are compared with the 2,000 kcal adult reference, and salt with the NHS limit of 6g a day.</p>
+
+<div class="controls">
+<input type="search" id="q" placeholder="Search dishes, e.g. katsu" aria-label="Search dishes">
+<select id="sec" aria-label="Menu section"><option value="">All sections</option></select>
+</div>
+
+<div class="total" aria-live="polite">
+<div class="stat"><b id="tk">0</b><span>kcal</span></div>
+<div class="stat"><b id="tp">0g</b><span>protein</span></div>
+<div class="stat"><b id="ts">0g</b><span>salt</span></div>
+<div class="bar" id="bk" title="Share of 2,000 kcal"><i></i></div>
+<div class="picked"><span id="pc">Nothing added yet</span><button type="button" id="clr" hidden>Clear</button></div>
+</div>
+
+<ul id="list"></ul>
+
+<p class="src" style="font-size:.85rem;color:var(--muted);margin:12px 0 0">Menu data: <a href="https://wagamamasmenu.uk/menu/calories/" target="_blank" rel="noopener">Wagamama calories by dish (WagamamasMenu.uk)</a>, UK menu, November 2026.</p>
+
+<details>
+<summary>Put this counter on your site</summary>
+<p>Paste this where you want it to appear. It loads on its own page in a frame, so it won't slow your page down or clash with your styles.</p>
+<textarea id="code" rows="4" readonly></textarea>
+</details>
+
+<footer>
+<p>Figures come from the restaurant's published nutrition information and can change when recipes do. Treat them as a guide, not medical advice. This is an independent tool and isn't affiliated with any restaurant brand.</p>
+<p class="more">Open source on <a href="https://github.com/Wajid077/restaurant-calorie-counter">GitHub</a>.</p>
+</footer>
+</main>
+<script>
+const D=[["Wok-Fried Greens", "Side", 151, 4.3, 1.3], ["Lollipop Prawn Kushiyaki", "Side", 188, 13.5, 1.8], ["Gyoza - Chicken", "Side", 195, 8.2, 2.1], ["Gyoza - Yasai", "Side", 208, 3.9, 0.7], ["Spicy Smashed Cucumber", "Side", 225, 3.0, 1.0], ["Gyoza - Beef Brisket + Kimchee", "Side", 232, 9.0, 2.3], ["Koko 'Prawn' Crackers", "Side", 242, 2.3, 2.0], ["Edamame With Salt", "Side", 280, 24.0, 2.0], ["Sweet Heat Sprouts", "Side", 282, 6.1, 0.7], ["Ebi Katsu", "Side", 284, 8.8, 2.2], ["Edamame With Chilli + Garlic Salt", "Side", 287, 24.3, 1.0], ["Gyoza - Duck", "Side", 313, 11.1, 3.3], ["Chilli Squid", "Side", 411, 14.4, 1.9], ["Bang Bang Cauliflower", "Side", 447, 3.5, 1.0], ["Gochujang Tamarind Corn Ribs", "Side", 467, 12.6, 3.1], ["Korean Barbecue Brisket Bao", "Side", 522, 17.4, 2.4], ["Oyster + Shiitake Mushrooms Bao", "Side", 577, 15.4, 3.6], ["Gochujang Tamarind Pork Ribs", "Side", 599, 30.7, 3.6], ["Hoisin Pulled Duck Bao", "Side", 626, 19.2, 2.3], ["Spicy Firecracker Wings", "Side", 747, 68.0, 3.6], ["Hot Honey Fried Chicken | Yuzu", "Side", 786, 36.4, 4.1], ["Tonkatsu Pork Bao", "Side", 797, 21.9, 5.1], ["Hot Honey Fried Chicken | Teriyaki", "Side", 806, 36.8, 4.9], ["Hot Honey Fried Chicken | Firecracker", "Side", 842, 35.4, 3.8], ["Grilled Chicken Ramen", "Ramen", 498, 35.7, 6.3], ["Chilli Chicken Ramen", "Ramen", 589, 37.9, 7.7], ["Tantanmen Beef Brisket Ramen", "Ramen", 632, 36.3, 6.5], ["Kare Burosu Ramen", "Ramen", 706, 30.0, 5.1], ["Gochujang Pork Belly Ramen", "Ramen", 920, 37.3, 6.8], ["Fish + Chips Ramen", "Ramen", 1006, 51.3, 7.6], ["Roast Dinner Ramen", "Ramen", 1062, 45.9, 8.8], ["Chicken Katsu Curry", "Curry", 988, 43.9, 2.8], ["Prawn Raisukaree", "Curry", 1022, 27.6, 4.7], ["Cranberry Chicken Katsu Curry", "Curry", 1026, 44.0, 2.8], ["Chicken Raisukaree", "Curry", 1092, 38.4, 3.2], ["Hot Chicken Katsu Curry", "Curry", 1115, 45.0, 4.5], ["Tofu Raisukaree", "Curry", 1135, 28.6, 3.1], ["Prawn Firecracker", "Curry", 1139, 28.2, 6.7], ["Yasai Katsu Curry", "Curry", 1216, 20.8, 2.7], ["Chicken Firecracker", "Curry", 1239, 44.4, 5.2], ["Tofu Firecracker", "Curry", 1252, 29.1, 5.1], ["Cranberry Yasai Katsu Curry", "Curry", 1253, 20.8, 2.7], ["Hot Yasai Katsu Curry", "Curry", 1343, 21.8, 4.5], ["Chicken + Prawn Turmeric Rice Bowl", "Donburi", 677, 32.4, 2.5], ["Gochujang Salmon Rice Bowl", "Donburi", 786, 36.3, 4.0], ["Chicken Thigh Teriyaki Donburi", "Donburi", 807, 39.9, 4.0], ["Beef Brisket Teriyaki Donburi", "Donburi", 818, 37.1, 4.8], ["Pulled Shiitake Donburi", "Donburi", 927, 28.9, 6.2], ["Grilled Duck Donburi", "Donburi", 1130, 53.8, 6.0], ["Yasai Yaki Soba | Udon", "Noodles", 638, 22.6, 3.2], ["Yasai Yaki Soba | Rice Noodles", "Noodles", 660, 16.9, 2.6], ["Chicken + Prawn Yaki Udon", "Noodles", 714, 36.9, 3.3], ["Yasai Yaki Soba | Mushroom", "Noodles", 768, 28.2, 3.8], ["Chicken Teriyaki Soba", "Noodles", 769, 37.8, 4.3], ["Chicken + Prawn Yaki Soba", "Noodles", 789, 34.0, 3.7], ["Katsu Udon", "Noodles", 844, 21.0, 3.2], ["Steak Teriyaki Soba", "Noodles", 864, 49.5, 4.8], ["Saku Saku Duck Soba", "Noodles", 933, 46.5, 5.1], ["Salmon Teriyaki Soba", "Noodles", 994, 45.5, 5.6], ["Pork Tonkatsu", "Chef's picks", 716, 46.8, 5.0], ["Signature Seafood Ramen", "Chef's picks", 974, 67.5, 10.4], ["Duck Akakare", "Chef's picks", 1267, 41.3, 4.3], ["Katsu Chicken Wrap", "Lunch", 482, 29.8, 1.2], ["Cranberry Katsu Chicken Wrap", "Lunch", 507, 29.8, 1.2], ["Yasai Katsu Wrap", "Lunch", 596, 18.6, 1.2], ["Cranberry Yasai Katsu Wrap", "Lunch", 621, 18.6, 1.2], ["Miso K-Chicken Lunch Box", "Lunch", 740, 29.7, 5.6], ["Nasi Goreng Lunch Box", "Lunch", 765, 37.3, 4.1], ["Miso Cauliflower Lunch Box", "Lunch", 800, 13.7, 4.9]];
+const ORDER=["Side","Ramen","Curry","Donburi","Noodles","Chef's picks","Lunch"];
+const LBL={"Side":"Sides","Ramen":"Ramen","Curry":"Curries","Donburi":"Donburi","Noodles":"Noodles","Chef's picks":"Chef's picks","Lunch":"Lunch"};
+const qty=new Array(D.length).fill(0);
+const $=id=>document.getElementById(id);
+const list=$("list"),q=$("q"),sec=$("sec");
+if(new URLSearchParams(location.search).has("embed"))document.documentElement.classList.add("embed");
+ORDER.forEach(s=>{const o=document.createElement("option");o.value=s;o.textContent=LBL[s];sec.append(o)});
+const fmt=n=>(Math.round(n*10)/10).toLocaleString("en-GB");
+function render(){
+  const term=q.value.trim().toLowerCase(),fs=sec.value;let html="",n=0;
+  for(const s of ORDER){
+    if(fs&&fs!==s)continue;
+    const rows=D.map((d,i)=>[d,i]).filter(([d])=>d[1]===s&&(!term||d[0].toLowerCase().includes(term)));
+    if(!rows.length)continue;
+    html+=`<li class="h">${LBL[s]}</li>`;
+    for(const [d,i] of rows){n++;
+      html+=`<li class="${qty[i]?"on":""}"><div class="qty"><button type="button" data-i="${i}" data-d="-1" aria-label="Remove ${d[0]}">−</button><output>${qty[i]}</output><button type="button" data-i="${i}" data-d="1" aria-label="Add ${d[0]}">+</button></div><span>${d[0]}</span><span class="s${d[4]>=6?" hi":""}">${fmt(d[4])}g salt</span><span class="k">${d[2].toLocaleString("en-GB")} kcal</span></li>`;}
+  }
+  list.innerHTML=n?html:`<li class="empty">No dishes match "${term.replace(/[<>&"]/g,"")}".</li>`;
+}
+function totals(){
+  let k=0,p=0,s=0,c=0;qty.forEach((x,i)=>{if(x){k+=x*D[i][2];p+=x*D[i][3];s+=x*D[i][4];c+=x}});
+  $("tk").textContent=k.toLocaleString("en-GB");$("tp").textContent=fmt(p)+"g";$("ts").textContent=fmt(s)+"g";
+  $("ts").style.color=s>6?"var(--bad)":"";
+  const pct=k/2000*100;$("bk").firstChild.style.width=Math.min(pct,100)+"%";$("bk").classList.toggle("over",pct>100);
+  $("pc").textContent=c?`${c} item${c>1?"s":""} · ${Math.round(pct)}% of 2,000 kcal`+(s>6?" · over the 6g salt limit":""):"Nothing added yet";
+  $("clr").hidden=!c;
+}
+list.addEventListener("click",e=>{const b=e.target.closest("button[data-i]");if(!b)return;const i=+b.dataset.i;qty[i]=Math.max(0,qty[i]+ +b.dataset.d);
+  const li=b.closest("li");li.querySelector("output").textContent=qty[i];li.classList.toggle("on",qty[i]>0);totals()});
+q.addEventListener("input",render);sec.addEventListener("change",render);
+$("clr").addEventListener("click",()=>{qty.fill(0);render();totals()});
+$("code").value='<iframe src="https://wajid077.github.io/restaurant-calorie-counter/?embed" title="Restaurant calorie counter" width="100%" height="620" style="border:0;max-width:760px" loading="lazy"></iframe>\n<p style="font-size:13px">Calorie counter by <a href="https://wagamamasmenu.uk/menu/calories/">WagamamasMenu.uk</a></p>';
+render();totals();
+</script>
+</body>
+</html>
